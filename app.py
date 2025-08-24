@@ -167,9 +167,9 @@ st.markdown(
     /* Insights Card Enhancement */
     .insights-card {{
         background: linear-gradient(145deg, rgba(17,17,17,0.9), {CUSTOM_PALETTE[3]});
-        border-radius: 16px;
-        padding: 24px;
-        margin-top: 24px;
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 0px;
         transition: all 0.4s ease;
         box-shadow: 0 4px 8px {CUSTOM_PALETTE[4]};
         color: #f0f0f0;
@@ -180,17 +180,16 @@ st.markdown(
     }}
     
     .insights-card::before {{
-        content: '';
-        position: absolute;
+        position: relative;
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, {CUSTOM_PALETTE[0]}, {CUSTOM_PALETTE[2]});
+        height: 0;
+        background: linear-gradient(180deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[4]});
     }}
     
     .insights-card:hover {{
-        transform: translateY(-6px);
+        transform: translateY(-3px);
         box-shadow: 0 16px 48px rgba(0,0,0,0.5);
     }}
     
@@ -200,7 +199,7 @@ st.markdown(
     }}
     
     .insights-card li {{
-        padding: 8px 0;
+        padding: 2px 0;
         position: relative;
         padding-left: 24px;
         transition: all 0.3s ease;
@@ -266,7 +265,7 @@ st.markdown(
     
     /* Plotly Chart Styling */
     .js-plotly-plot {{
-        border-radius: 12px;
+        border-radius: 6px;
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }}
@@ -300,8 +299,8 @@ st.markdown(
         font-size: 1.8rem;
         font-weight: 600;
         color: #ffffff;
-        margin: 32px 0 20px 0;
-        padding: 16px 0;
+        margin: 3px 0 6px 0; /* reduced top margin from 32px to 8px */
+        padding: 3px 0;       /* reduced padding from 16px to 8px */
         border-bottom: 2px solid rgba(255,255,255,0.1);
         position: relative;
         animation: fadeInUp 0.6s ease-out;
@@ -320,7 +319,7 @@ st.markdown(
     /* Enhanced Chart Containers */
     .chart-container {{
         background: rgba(255,255,255,0.05);
-        border-radius: 16px;
+        border-radius: 12px;
         padding: 24px;
         margin: 16px 0;
         box-shadow: 0 8px 32px rgba(0,0,0,0.2);
@@ -332,6 +331,18 @@ st.markdown(
     .chart-container:hover {{
         transform: translateY(-4px);
         box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }}
+
+    /* Table Section Height Control */
+    .table-section-container {{
+        min-height: 300px;
+        max-height: 600px;
+        margin-bottom: 2rem;
+    }}
+
+    .table-chart-container {{
+        height: 300px;
+        overflow: hidden;
     }}
     
     </style>
@@ -600,7 +611,7 @@ def plot_heatmap_table(filtered: pd.DataFrame):
         ]
     )
 
-    fig.update_layout(title="Aggregated Metrics by Audit Group")
+    fig.update_layout(title="Aggregated Metrics by Audit Group", height=270)
     return fig
 
 def plot_airline_table(filtered: pd.DataFrame):
@@ -651,7 +662,7 @@ def plot_airline_table(filtered: pd.DataFrame):
         ]
     )
 
-    fig.update_layout(title="Aggregated Metrics by Airline")
+    fig.update_layout(title="Aggregated Metrics by Airline", height=300)
     return fig
 
 
