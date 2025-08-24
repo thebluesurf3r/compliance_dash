@@ -82,12 +82,12 @@ st.markdown(
     
     @keyframes pulse {{
         0%, 100% {{ transform: scale(1); }}
-        50% {{ transform: scale(1.02); }}
+        60% {{ transform: scale(1.01); }}
     }}
     
     @keyframes shimmer {{
-        0% {{ background-position: -1000px 0; }}
-        100% {{ background-position: 1000px 0; }}
+        0% {{ background-position: -900px 0; }}
+        100% {{ background-position: 900px 0; }}
     }}
 
     /* Sidebar */
@@ -108,26 +108,26 @@ st.markdown(
         transition: transform 0.2s ease-in-out;
     }}
     .score-card:hover {{
-        transform: translateY(-4px);
+        transform: translateY(-3px);
     }}
     .score-label {{
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.9rem;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         display: block;
         color: ##ffffff !important; /* black labels */
     }}
     .score-value {{
-        font-size: 1.6rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 600;
         color: ##ffffff !important; /* black values */
     }}
 
     /* Unchecked box background */
     div[role="checkbox"] > div:first-child {{
-        border: 2px solid {CUSTOM_PALETTE[0]} !important;
+        border: 3px solid {CUSTOM_PALETTE[0]} !important;
         background-color: transparent !important;
-        border-radius: 4px;
+        border-radius: 3px;
         width: 18px !important;
         height: 18px !important;
     }}
@@ -153,15 +153,15 @@ st.markdown(
     .st-card {{
         background: linear-gradient(160deg, {CUSTOM_PALETTE[2]}, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
         border-radius: 12px;
-        padding: 18px 22px;
-        margin: 10px 5px;
+        padding: 18px 21px;
+        margin: 9px 6px;
         color: #fff;
         box-shadow: {CUSTOM_PALETTE[1]};
-        transition: all 0.25s ease-in-out;
+        transition: all 0.3s ease-in-out;
     }}
     .st-card:hover {{
         transform: translateY(-6px) scale(1.01);
-        box-shadow: 0 12px 20px {CUSTOM_PALETTE[1]};
+        box-shadow: 0 12px 18px {CUSTOM_PALETTE[1]};
     }}
 
     /* Insights Card Enhancement */
@@ -170,8 +170,8 @@ st.markdown(
         border-radius: 12px;
         padding: 15px;
         margin-top: 0px;
-        transition: all 0.4s ease;
-        box-shadow: 0 4px 8px {CUSTOM_PALETTE[4]};
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 9px {CUSTOM_PALETTE[4]};
         color: #f0f0f0;
         border: 1px solid rgba(255,255,255,0.1);
         animation: fadeInUp 1s ease-out;
@@ -199,7 +199,7 @@ st.markdown(
     }}
     
     .insights-card li {{
-        padding: 2px 0;
+        padding: 3px 0;
         position: relative;
         padding-left: 24px;
         transition: all 0.3s ease;
@@ -223,15 +223,15 @@ st.markdown(
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 200px;
+        height: 240px;
     }}
     
     .loading-spinner {{
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255,255,255,0.1);
-        border-left: 4px solid {CUSTOM_PALETTE[1]};
-        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-left: 3px solid {CUSTOM_PALETTE[1]};
+        border-radius: 60%;
         animation: spin 1s linear infinite;
     }}
     
@@ -257,17 +257,17 @@ st.markdown(
         -webkit-text-fill-color: transparent;
         background-clip: text;
         font-size: 3rem;
-        font-weight: 700;
+        font-weight: 600;
         text-align: center;
-        margin-bottom: 32px;
-        animation: fadeInUp 0.8s ease-out;
+        margin-bottom: 30px;
+        animation: fadeInUp 0.9s ease-out;
     }}
     
     /* Plotly Chart Styling */
     .js-plotly-plot {{
         border-radius: 6px;
         overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 3px 18px rgba(0,0,0,0.2);
     }}
 
     /* Tab Enhancement */
@@ -285,7 +285,7 @@ st.markdown(
         padding: 9px;
         transition: all 0.3s ease;
         color: rgba(255,255,255,0.7);
-        font-weight: 250;
+        font-weight: 240;
     }}
     
     .stTabs [aria-selected="true"] {{
@@ -309,10 +309,10 @@ st.markdown(
     .section-header::before {{
         content: '';
         position: absolute;
-        bottom: -2px;
+        bottom: -3px;
         left: 0;
         width: 60px;
-        height: 2px;
+        height: 3px;
         background: linear-gradient(90deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]});
     }}
 
@@ -329,14 +329,14 @@ st.markdown(
     }}
     
     .chart-container:hover {{
-        transform: translateY(-4px);
+        transform: translateY(-3px);
         box-shadow: 0 12px 40px rgba(0,0,0,0.3);
     }}
 
     /* Table Section Height Control */
     .table-section-container {{
-        min-height: 300px;
-        max-height: 600px;
+        min-height: 270px;
+        max-height: 300px;
         margin-bottom: 2rem;
     }}
 
@@ -676,6 +676,23 @@ def styled_metric(label, value):
     """
 
 
+def filter_valid_invalid(df: pd.DataFrame, mode="Invalid Data") -> pd.DataFrame:
+    """
+    Returns either valid or invalid records depending on mode.
+    'Valid Data' -> removes nulls, NaNs, 0s in numeric columns
+    'Invalid Data' -> keeps only rows with nulls, NaNs, or 0s
+    """
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    
+    if mode == "Invalid Data":
+        mask = df[numeric_cols].isna().any(axis=1) | (df[numeric_cols] == 0).any(axis=1)
+        return df[mask].copy()
+    else:  # Valid Data
+        mask = df[numeric_cols].notna().all(axis=1) & (df[numeric_cols] != 0).all(axis=1)
+        return df[mask].copy()
+
+
+
 # ---------------------- Main App -------------------------------
 st.sidebar.header("Dashboard Configuration")
 
@@ -759,12 +776,41 @@ if os.path.exists(data_path):
     most_frequent_category = filtered['departures_cat'].mode()[0]
 
 
-    # Key Insights in Bootstrap container
+    # ---------------------- Key Insights ------------------
     avg_compliance = filtered['compliance_rate'].mean()
-    worst_ref = (filtered.groupby('reference_number')['compliance_rate'].mean().idxmin())
-    worst_ref_val = (filtered.groupby('reference_number')['compliance_rate'].mean().min())
+    worst_ref = filtered.groupby('reference_number')['compliance_rate'].mean().idxmin()
+    worst_ref_val = filtered.groupby('reference_number')['compliance_rate'].mean().min()
+    best_ref = filtered.groupby('reference_number')['compliance_rate'].mean().idxmax()
+    best_ref_val = filtered.groupby('reference_number')['compliance_rate'].mean().max()
     most_frequent_category = filtered['departures_cat'].mode()[0]
-    
+
+    # Top and bottom performing airlines
+    airline_compliance = filtered.groupby('airline')['compliance_rate'].mean()
+    best_airline = airline_compliance.idxmax()
+    best_airline_val = airline_compliance.max()
+    worst_airline = airline_compliance.idxmin()
+    worst_airline_val = airline_compliance.min()
+
+    # Date coverage
+    start_date, end_date = filtered['date'].min(), filtered['date'].max()
+
+    # Avg and total audits
+    total_audits = filtered['count_of_audit'].sum()
+    total_compliant_audits = filtered['count_of_compliant_audit'].sum()
+    avg_audit_density = filtered['audit_density'].mean()
+
+    # Compliance variability
+    std_compliance = filtered['compliance_rate'].std()
+    max_compliance = filtered['compliance_rate'].max()
+    min_compliance = filtered['compliance_rate'].min()
+
+    # Temporal insights
+    quarterly_compliance = filtered.groupby('quarter')['compliance_rate'].mean()
+    best_quarter = quarterly_compliance.idxmax()
+    worst_quarter = quarterly_compliance.idxmin()
+    weekend_compliance = filtered.groupby('is_weekend')['compliance_rate'].mean()
+    weekend_diff = weekend_compliance.get(1,0) - weekend_compliance.get(0,0)
+
     insights_html = f"""
     <div class="bootstrap-container">
         <div class="insights-card">
@@ -773,19 +819,30 @@ if os.path.exists(data_path):
             </div>
             <ul>
                 <li>Overall compliance rate is <strong>{avg_compliance:.2%}</strong></li>
-                <li>The lowest performing audit group is <strong>{worst_ref}</strong> with <strong>{worst_ref_val:.2%}</strong> compliance</li>
-                <li>Departures are most frequently categorized as <strong>{most_frequent_category}</strong></li>
-                <li><strong>{filtered['reference_number'].nunique()} unique audit groups</strong> are being tracked</li>
-                <li>The dataset covers audits from <strong>{filtered['year'].min()} to {filtered['year'].max()}</strong></li>
-                <li>Compliance shows variation across quarters — useful for seasonal trend analysis</li>
-                <li>Around <strong>{len(filtered):,} total records</strong> provide a robust sample size</li>
+                <li>Audit group with minimum average compliance: <strong>{worst_ref}</strong> ({worst_ref_val:.2%})</li>
+                <li>Audit group with maximum average compliance: <strong>{best_ref}</strong> ({best_ref_val:.2%})</li>
+                <li>Most frequent departure category: <strong>{most_frequent_category}</strong></li>
+                <li><strong>{filtered['reference_number'].nunique()} unique audit groups</strong> are included in the dataset</li>
+                <li>Dataset covers audits from <strong>{start_date.date()} to {end_date.date()}</strong></li>
+                <li>Quarterly compliance shows natural variation — useful for seasonal trend analysis</li>
+                <li>Total records analyzed: <strong>{len(filtered):,}</strong></li>
+                <li>Total audits conducted: <strong>{total_audits:,}</strong></li>
+                <li>Total compliant audits: <strong>{total_compliant_audits:,}</strong></li>
+                <li>Average audit density: <strong>{avg_audit_density:.4f}</strong></li>
+                <li>Airline with maximum average compliance: <strong>{best_airline}</strong> ({best_airline_val:.2%})</li>
+                <li>Airline with minimum average compliance: <strong>{worst_airline}</strong> ({worst_airline_val:.2%})</li>
+                <li>Compliance rate standard deviation: <strong>{std_compliance:.2%}</strong></li>
+                <li>Maximum compliance observed: <strong>{max_compliance:.2%}</strong></li>
+                <li>Minimum compliance observed: <strong>{min_compliance:.2%}</strong></li>
+                <li>Quarter with maximum compliance: <strong>Q{best_quarter}</strong>; Quarter with minimum compliance: <strong>Q{worst_quarter}</strong></li>
+                <li>Difference in compliance between weekends and weekdays: <strong>{weekend_diff:.2%}</strong></li>
             </ul>
         </div>
     </div>
     """
-    
-    st.markdown(insights_html, unsafe_allow_html=True)
 
+
+    st.markdown(insights_html, unsafe_allow_html=True)
 
 else:
     st.sidebar.error(f"File not found: {data_path}")
