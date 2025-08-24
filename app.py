@@ -93,7 +93,9 @@ st.markdown(
     /* Sidebar */
     section[data-testid="stSidebar"] {{
         background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8)), 
-                url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+                # url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+                # url('https://images.pexels.com/photos/2646237/pexels-photo-2646237.jpeg');
+                url('https://images.pexels.com/photos/2253921/pexels-photo-2253921.jpeg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -103,7 +105,8 @@ st.markdown(
 
     /* Score cards */
     .score-card {{
-        background: linear-gradient(145deg, {CUSTOM_PALETTE[2]}, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
+        # background: linear-gradient(145deg, {CUSTOM_PALETTE[2]}, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
+        background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8));
         border-radius: 9px;
         padding: 18px;
         text-align: center;
@@ -324,7 +327,7 @@ st.markdown(
         left: 0;
         width: 60px;
         height: 3px;
-        background: linear-gradient(90deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]});
+        background: linear-gradient(90deg, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
     }}
 
     /* Enhanced Chart Containers */
@@ -439,46 +442,59 @@ def load_and_process(path: str) -> pd.DataFrame:
 # ---------------------- Visualization Functions ----------------
 import plotly.express as px
 
-def plot_record_count_by_reference(filtered: pd.DataFrame):
-    # Aggregate counts correctly
-    count_ref = (
-        filtered['reference_number']
+def plot_record_count(filtered: pd.DataFrame, x_axis: str = "reference_number"):
+    # Validate the x_axis input
+    assert x_axis in ["reference_number", "airline"], "x_axis must be 'reference_number' or 'airline'"
+
+    # Aggregate counts by selected x_axis
+    count_df = (
+        filtered[x_axis]
         .value_counts()
         .reset_index()
     )
-    count_ref.columns = ['reference_number', 'count']  # overwrite cleanly
-    count_ref = count_ref.sort_values('count', ascending=False)
+    count_df.columns = [x_axis, 'count']  # rename columns cleanly
+    count_df = count_df.sort_values('count', ascending=False)
 
-    # Base bar chart
+    # Set plot title and x-axis label depending on x_axis
+    title_map = {
+        "reference_number": "Count of Audits per Audit Group",
+        "airline": "Count of Audits per Airline"
+    }
+    layout_xaxis_title = {
+        "reference_number": "Reference Number",
+        "airline": "Airline"
+    }
+    color_scale = "CUSTOM_PALETTE"  # Assuming you want the same palette; replace if needed
+
     fig = px.bar(
-        count_ref,
-        x='reference_number',
+        count_df,
+        x=x_axis,
         y='count',
-        color='count',  # Gradient color by count
+        color='count',
         color_continuous_scale=CUSTOM_PALETTE,
-        title="Count of Audits per Audit Group"
+        title=title_map[x_axis]
     )
 
     # Add data labels
     fig.update_traces(
-        text=count_ref['count'],
+        text=count_df['count'],
         textposition="outside",
         marker_line=dict(width=0.8, color="black")
     )
 
-    # Add reference line for average
-    avg_val = count_ref['count'].mean()
+    # Add reference line for average count
+    avg_val = count_df['count'].mean()
     fig.add_hline(
         y=avg_val,
         line_dash="dash",
         line_color="red"
     )
 
-    # Add annotation manually at center
+    # Add annotation at center for average
     fig.add_annotation(
-        x=0.5,  # middle of the x-axis (in paper coords)
+        x=0.5,
         y=avg_val,
-        xref="paper",  # relative to whole plot width
+        xref="paper",
         yref="y",
         text=f"Avg: {avg_val:.1f}",
         showarrow=False,
@@ -489,10 +505,9 @@ def plot_record_count_by_reference(filtered: pd.DataFrame):
         borderpad=4
     )
 
-
     # Update layout
     fig.update_layout(
-        xaxis=dict(title="Reference Number", tickangle=-45, showgrid=False),
+        xaxis=dict(title=layout_xaxis_title[x_axis], tickangle=-45, showgrid=False),
         yaxis=dict(title="Record Count", zeroline=False, showgrid=True),
         bargap=0.25,
         plot_bgcolor="rgba(0,0,0,0)",
@@ -616,7 +631,7 @@ def plot_heatmap_table(filtered: pd.DataFrame):
                         row_colors
                     ],
                     align="center",
-                    font=dict(color="black", size=11)
+                    font=dict(color="white", size=11)
                 )
             )
         ]
@@ -667,7 +682,7 @@ def plot_airline_table(filtered: pd.DataFrame):
                     ],
                     fill_color=[row_colors, row_colors, row_colors, row_colors],
                     align="center",
-                    font=dict(color="black", size=11)
+                    font=dict(color="white", size=11)
                 )
             )
         ]
@@ -676,6 +691,150 @@ def plot_airline_table(filtered: pd.DataFrame):
     fig.update_layout(title="Aggregated Metrics by Airline", height=300)
     return fig
 
+def plot_compliance_timeseries(filtered: pd.DataFrame, metric: str = "Compliance Rate"):
+    import numpy as np
+
+    if metric == "Compliance Rate":
+        timeseries = (
+            filtered.groupby('date')['compliance_rate']
+            .mean()
+            .reset_index()
+            .sort_values('date')
+        )
+        if len(timeseries) > 7:
+            timeseries['value_smooth'] = timeseries['compliance_rate'].rolling(window=7, min_periods=1).mean()
+        else:
+            timeseries['value_smooth'] = timeseries['compliance_rate']
+
+        y_title = "Compliance Rate"
+        y_values = 'value_smooth'
+        line_color = "#3960fb"
+        marker_color = "#6583fd"
+        hover_template = "%{y:.2%}"
+        show_avg_line = True
+        avg_val = timeseries['compliance_rate'].mean()
+
+        fig = px.line(
+            timeseries,
+            x='date',
+            y=y_values,
+            title=f"{y_title} Over Time",
+            color_discrete_sequence=[line_color],
+        )
+        fig.add_scatter(
+            x=timeseries['date'],
+            y=timeseries[y_values],
+            mode='markers',
+            marker=dict(color=marker_color, size=6, opacity=0.6),
+            name="Data Points"
+        )
+
+        if show_avg_line:
+            fig.add_hline(y=avg_val, line_dash="dash", line_color="red")
+            fig.add_annotation(
+                x=0.5,
+                y=avg_val,
+                xref="paper",
+                yref="y",
+                text=f"Avg: {avg_val:.2%}",
+                showarrow=False,
+                font=dict(color="red", size=12),
+                bgcolor="black",
+                bordercolor="red",
+                borderwidth=1,
+                borderpad=4
+            )
+
+    else:  # Count of Audits with multiple statistics
+        # Calculate stats per date
+        stats_df = filtered.groupby('date').agg(
+            count=('date', 'size'),
+            mean=('count_of_audit', 'mean'),
+            median=('count_of_audit', 'median'),
+            std=('count_of_audit', 'std'),
+            min_val=('count_of_audit', 'min'),
+            max_val=('count_of_audit', 'max')
+        ).reset_index().sort_values('date')
+
+        y_title = "Count of Audits"
+        hover_template = "%{y}"
+
+        # Base line plot for 'count' (number of records)
+        fig = px.line(
+            stats_df,
+            x='date',
+            y='count',
+            title=f"{y_title} Over Time with Statistics",
+            color_discrete_sequence=["#39a8fb"],
+        )
+        fig.add_scatter(
+            x=stats_df['date'],
+            y=stats_df['count'],
+            mode='markers',
+            marker=dict(color="#6fbfff", size=6, opacity=0.6),
+            name="Count of Audits"
+        )
+
+        # Add lines for mean, median, min, max, std (std shown as +/-)
+        fig.add_scatter(
+            x=stats_df['date'],
+            y=stats_df['mean'],
+            mode='lines',
+            line=dict(color='green', dash='dot'),
+            name='Mean of count_of_audit'
+        )
+        fig.add_scatter(
+            x=stats_df['date'],
+            y=stats_df['median'],
+            mode='lines',
+            line=dict(color='orange', dash='dash'),
+            name='Median of count_of_audit'
+        )
+        fig.add_scatter(
+            x=stats_df['date'],
+            y=stats_df['min_val'],
+            mode='lines',
+            line=dict(color='red', dash='dashdot'),
+            name='Min of count_of_audit'
+        )
+        fig.add_scatter(
+            x=stats_df['date'],
+            y=stats_df['max_val'],
+            mode='lines',
+            line=dict(color='purple', dash='longdash'),
+            name='Max of count_of_audit'
+        )
+        # For std, plot mean +/- std as shaded area or two lines (optional):
+        # Here we add mean+std and mean-std lines if std is not NaN
+        if not stats_df['std'].isnull().all():
+            fig.add_scatter(
+                x=stats_df['date'],
+                y=stats_df['mean'] + stats_df['std'],
+                mode='lines',
+                line=dict(color='gray', dash='dot'),
+                name='Mean + STD',
+                opacity=0.4
+            )
+            fig.add_scatter(
+                x=stats_df['date'],
+                y=stats_df['mean'] - stats_df['std'],
+                mode='lines',
+                line=dict(color='gray', dash='dot'),
+                name='Mean - STD',
+                opacity=0.4
+            )
+
+    fig.update_layout(
+        xaxis=dict(title="Date", showgrid=False),
+        yaxis=dict(title=y_title),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(size=12),
+    )
+
+    fig.update_traces(hovertemplate=hover_template)
+
+    return fig
 
 
 def styled_metric(label, value):
@@ -754,21 +913,35 @@ if os.path.exists(data_path):
 
     # ---------------- Visualizations -----------------
     st.markdown("## Visualizations")
-    tab1, tab2, tab3 = st.tabs(["Audit Counts", "Compliance Distribution", "Parallel Categories"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Time Series", "Audit Counts", "Outliers", "Parallel Categories"])
 
-    with tab1:
-        st.plotly_chart(plot_record_count_by_reference(filtered), use_container_width=True)
-
-    with tab2:
-        dimension = st.radio("Distribution by:", ["airline", "reference_number"], horizontal=True)
-        st.plotly_chart(plot_boxplot_distribution(filtered, dimension), use_container_width=True)
+    # with tab2:
+    #     st.plotly_chart(plot_record_count_by_reference(filtered), use_container_width=True)
 
     with tab3:
+        dimension = st.radio(
+            "Group by:", 
+            ["airline", "reference_number"], 
+            horizontal=True,
+            format_func=lambda x: "Audit Group" if x == "reference_number" else "Airline"
+        )
+        st.plotly_chart(plot_boxplot_distribution(filtered, dimension), use_container_width=True)
+
+
+    with tab2:
+        x_axis_choice = st.radio("Count by:", ["airline", "reference_number"], format_func=lambda x: "Audit Group" if x=="reference_number" else "Airline", horizontal=True)
+        st.plotly_chart(plot_record_count(filtered, x_axis=x_axis_choice), use_container_width=True)
+
+    with tab4:
         st.plotly_chart(plot_parallel_categories(filtered), use_container_width=True)
+
+    with tab1:
+        metric = st.radio("Select Metric:", ["Compliance Rate", "Count of Audits"], horizontal=True)
+        st.plotly_chart(plot_compliance_timeseries(filtered, metric=metric), use_container_width=True)
 
     # ---------------- Table Section ------------------
     st.markdown("## Aggregated Tables")
-    tab_table1, tab_table2 = st.tabs(["By Reference Number", "By Airline"])
+    tab_table1, tab_table2 = st.tabs(["Audit Group", "Airline"])
 
     with tab_table1:
         st.plotly_chart(plot_heatmap_table(filtered), use_container_width=True)
