@@ -92,7 +92,12 @@ st.markdown(
 
     /* Sidebar */
     section[data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
+        background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8)), 
+                url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        # background: linear-gradient(180deg, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
         color: #fff !important;
     }}    
 
@@ -166,7 +171,13 @@ st.markdown(
 
     /* Insights Card Enhancement */
     .insights-card {{
-        background: linear-gradient(145deg, rgba(17,17,17,0.9), {CUSTOM_PALETTE[3]});
+        background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8)), 
+                url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+
+        # background: linear-gradient(145deg, rgba(17,17,17,0.9), {CUSTOM_PALETTE[3]});
         border-radius: 12px;
         padding: 15px;
         margin-top: 0px;
