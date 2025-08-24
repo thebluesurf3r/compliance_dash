@@ -154,11 +154,7 @@ def plot_record_count_by_reference(filtered: pd.DataFrame):
         color='reference_number',
         title="Count of Audits per Audit Group"
     )
-    fig.update_traces(
-        text=count_ref['count'],
-        textposition='outside',
-        hovertemplate="<b>Reference:</b> %{x}<br><b>Count:</b> %{y}<extra></extra>"
-    )
+    
     fig.update_layout(
         xaxis=dict(title="Reference Number", tickangle=-45, showgrid=False),
         yaxis=dict(title="Record Count"),
