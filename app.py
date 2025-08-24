@@ -16,23 +16,19 @@ st.set_page_config(
 
 # ---------------------- Custom Color Palette ------------------
 CUSTOM_PALETTE = [
-    "#273C76",  # Rhapsody Blue
-    "#005BAC",  # United Blue
-    "#1CA9C9",  # Pacific Blue
-    "#5C6670",  # Runway Gray
-    "#87CEEB",  # Sky Blue
-    "#6F42C1",  # Atlantic Amethyst
-    "#800080"   # Premium Purple
-]
+    "#6583fd", #0
+    "#3960fb", #1
+    "#0c39ed", #2
+    "#2a08b5", #3
+    "#051966", #4
+    ]
 
 CUSTOM_COLOR_SCALE = [
-    [0.0, "#273C76"],
-    [0.16, "#005BAC"],
-    [0.33, "#1CA9C9"],
-    [0.5, "#5C6670"],
-    [0.66, "#87CEEB"],
-    [0.83, "#6F42C1"],
-    [1.0, "#800080"]
+    [0.0, "#6583fd"],
+    [0.16, "#3960fb"],
+    [0.33, "#0c39ed"],
+    [0.5, "#2a08b5"],
+    [0.66, "#051966"],
 ]
 
 # ---------------------- Global Plotly Theme -------------------
@@ -46,17 +42,17 @@ st.markdown(
     <style>
     /* Sidebar */
     section[data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, {CUSTOM_PALETTE[0]}, {CUSTOM_PALETTE[3]});
+        background: linear-gradient(180deg, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
         color: #fff !important;
     }}
 
     /* Score cards */
     .score-card {{
-        background: linear-gradient(145deg, {CUSTOM_PALETTE[0]}, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]});
-        border-radius: 12px;
+        background: linear-gradient(145deg, {CUSTOM_PALETTE[2]}, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
+        border-radius: 9px;
         padding: 18px;
         text-align: center;
-        color: #000 !important; /* Force black text */
+        color: #ffffff !important; /* Force black text */
         box-shadow: 0 6px 12px rgba(0,0,0,0.6);
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         transition: transform 0.2s ease-in-out;
@@ -69,13 +65,78 @@ st.markdown(
         font-size: 0.9rem;
         margin-bottom: 4px;
         display: block;
-        color: #000 !important; /* black labels */
+        color: ##ffffff !important; /* black labels */
     }}
     .score-value {{
         font-size: 1.6rem;
         font-weight: 700;
-        color: #000 !important; /* black values */
+        color: ##ffffff !important; /* black values */
     }}
+
+    /* Unchecked box background */
+    div[role="checkbox"] > div:first-child {{
+        border: 2px solid {CUSTOM_PALETTE[0]} !important;
+        background-color: transparent !important;
+        border-radius: 4px;
+        width: 18px !important;
+        height: 18px !important;
+    }}
+
+    /* Checked box background */
+    div[role="checkbox"][aria-checked="true"] > div:first-child {{
+        background-color: {CUSTOM_PALETTE[1]} !important;
+        border-color: {CUSTOM_PALETTE[1]} !important;
+    }}
+
+    /* Tick mark color inside the box */
+    div[role="checkbox"][aria-checked="true"] svg {{
+        stroke: white !important;
+    }}
+
+    /* Checkbox label */
+    label[data-testid="stMarkdownContainer"] p {{
+        color: white !important;
+        margin-left: 6px;
+    }}
+
+    /* Card Wrapper */
+    .st-card {{
+        background: linear-gradient(160deg, {CUSTOM_PALETTE[2]}, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 10px 5px;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+        transition: all 0.25s ease-in-out;
+    }}
+    .st-card:hover {{
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.8);
+    }}
+
+    /* Section Headers */
+    .section-header {{
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 12px;
+    }}
+
+    /* Key Insights Styling */
+    .insights-card {{
+        background: linear-gradient(145deg, #111, {CUSTOM_PALETTE[3]});
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 20px;
+        transition: all 0.25s ease-in-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        color: #f0f0f0;
+    }}
+    .insights-card:hover {{
+        transform: translateY(-4px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.8);
+    }}
+    
     </style>
     """,
     unsafe_allow_html=True,
@@ -127,6 +188,19 @@ def handle_nan_inf(df: pd.DataFrame, cols=None) -> pd.DataFrame:
         cols = df.columns
     return df.replace([np.inf, -np.inf], np.nan).dropna(subset=cols)
 
+def engineer_departure_std_bins(df: pd.DataFrame, col="departures"):
+    mean, std = df[col].mean(), df[col].std()
+    min_val, max_val = df[col].min(), df[col].max()
+
+    # ensure bins are strictly increasing
+    bins = [min_val - 1, max(mean - std, min_val), mean, mean + std, max_val]
+    bins = sorted(set(bins))  # remove duplicates if mean==mean±std
+
+    labels = ["Low", "Average", "Above Avg", "High"][:len(bins)-1]
+
+    df[f"{col}_cat"] = pd.cut(df[col], bins=bins, labels=labels, include_lowest=True)
+    return df
+
 
 @st.cache_data
 def load_and_process(path: str) -> pd.DataFrame:
@@ -138,28 +212,75 @@ def load_and_process(path: str) -> pd.DataFrame:
         'compliance_rate', 'audit_density',
         'compliance_per_departure', 'prev_compliance_rate'
     ])
+    df = engineer_departure_std_bins(df)
     return df
 
 
+
 # ---------------------- Visualization Functions ----------------
+import plotly.express as px
+
 def plot_record_count_by_reference(filtered: pd.DataFrame):
-    count_ref = filtered['reference_number'].value_counts().reset_index()
-    count_ref.columns = ['reference_number', 'count']
+    # Aggregate counts correctly
+    count_ref = (
+        filtered['reference_number']
+        .value_counts()
+        .reset_index()
+    )
+    count_ref.columns = ['reference_number', 'count']  # overwrite cleanly
     count_ref = count_ref.sort_values('count', ascending=False)
 
+    # Base bar chart
     fig = px.bar(
         count_ref,
         x='reference_number',
         y='count',
-        color='reference_number',
+        color='count',  # Gradient color by count
+        color_continuous_scale=CUSTOM_PALETTE,
         title="Count of Audits per Audit Group"
     )
-    
+
+    # Add data labels
+    fig.update_traces(
+        text=count_ref['count'],
+        textposition="outside",
+        marker_line=dict(width=0.8, color="black")
+    )
+
+    # Add reference line for average
+    avg_val = count_ref['count'].mean()
+    fig.add_hline(
+        y=avg_val,
+        line_dash="dash",
+        line_color="red"
+    )
+
+    # Add annotation manually at center
+    fig.add_annotation(
+        x=0.5,  # middle of the x-axis (in paper coords)
+        y=avg_val,
+        xref="paper",  # relative to whole plot width
+        yref="y",
+        text=f"Avg: {avg_val:.1f}",
+        showarrow=False,
+        font=dict(color="red", size=12, weight="bold"),
+        bgcolor="white",
+        bordercolor="red",
+        borderwidth=1,
+        borderpad=4
+    )
+
+
+    # Update layout
     fig.update_layout(
         xaxis=dict(title="Reference Number", tickangle=-45, showgrid=False),
-        yaxis=dict(title="Record Count"),
-        bargap=0.3
+        yaxis=dict(title="Record Count", zeroline=False, showgrid=True),
+        bargap=0.25,
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(size=12),
     )
+
     return fig
 
 
@@ -181,25 +302,51 @@ def plot_boxplot_distribution(filtered: pd.DataFrame, dimension: str):
 
 
 def plot_parallel_categories(filtered: pd.DataFrame):
-    pcat_cols = ['reference_number', 'quarter', 'year']
+    pcat_cols = ['reference_number', 'quarter', 'year', 'departures_cat']
     if 'airline' in filtered.columns:
         pcat_cols.insert(1, 'airline')
 
     filtered = filtered.copy()
     filtered['quarter'] = filtered['quarter'].astype(str)
 
-    dimensions = [dict(values=filtered[col], label=col.capitalize()) for col in pcat_cols]
+    # ✅ Define custom labels
+    label_map = {
+        "reference_number": "Audit Group",
+        "airline": "Airline",
+        "quarter": "Quarter",
+        "year": "Year",
+        "departures_cat": "Departure Traffic"
+    }
 
-    categories = filtered.get("airline", pd.Series([])).astype(str).unique()
-    cat_to_num = {cat: i for i, cat in enumerate(categories)}
-    filtered["_cat_code"] = filtered.get("airline", pd.Series([])).map(cat_to_num)
+    # Build dimensions with manual labels
+    dimensions = [
+        dict(values=filtered[col], label=label_map.get(col, col))
+        for col in pcat_cols
+    ]
 
+    # Handle airline category codes safely
+    if "airline" in filtered.columns:
+        categories = filtered["airline"].astype(str).unique()
+        cat_to_num = {cat: i for i, cat in enumerate(categories)}
+        filtered["_cat_code"] = filtered["airline"].map(cat_to_num)
+        color_col = "_cat_code"
+    else:
+        filtered["_cat_code"] = 0
+        color_col = "_cat_code"
+
+    # Build figure
     fig = go.Figure(data=[go.Parcats(
         dimensions=dimensions,
-        line=dict(color=filtered["_cat_code"], colorscale=CUSTOM_COLOR_SCALE, shape="hspline")
+        line=dict(
+            color=filtered[color_col],
+            colorscale=CUSTOM_COLOR_SCALE,
+            shape="hspline"
+        )
     )])
+
     fig.update_layout(title="Parallel Categories Distribution")
     return fig
+
 
 
 def plot_heatmap_table(filtered: pd.DataFrame):
@@ -230,7 +377,7 @@ def plot_heatmap_table(filtered: pd.DataFrame):
     row_colors = []
     for i, ref in enumerate(agg_df["reference_number"]):
         if ref == "Total":
-            row_colors.append(CUSTOM_PALETTE[1])
+            row_colors.append(CUSTOM_PALETTE[4])
         else:
             row_colors.append(CUSTOM_PALETTE[3])
 
@@ -244,7 +391,7 @@ def plot_heatmap_table(filtered: pd.DataFrame):
                         "Count of Compliant Audits",
                         "Avg. Compliance Rate"
                     ],
-                    fill_color=CUSTOM_PALETTE[0],
+                    fill_color=CUSTOM_PALETTE[4],
                     align="center",
                     font=dict(color="white", size=12)
                 ),
@@ -395,7 +542,7 @@ if os.path.exists(data_path):
             st.markdown(styled_metric(label, val), unsafe_allow_html=True)
 
     # ---------------- Visualizations -----------------
-    st.markdown("## 📈 Visualizations")
+    st.markdown("## Visualizations")
     tab1, tab2, tab3 = st.tabs(["Audit Counts", "Compliance Distribution", "Parallel Categories"])
 
     with tab1:
@@ -409,7 +556,7 @@ if os.path.exists(data_path):
         st.plotly_chart(plot_parallel_categories(filtered), use_container_width=True)
 
     # ---------------- Table Section ------------------
-    st.markdown("## 📊 Aggregated Tables")
+    st.markdown("## Aggregated Tables")
     tab_table1, tab_table2 = st.tabs(["By Reference Number", "By Airline"])
 
     with tab_table1:
@@ -417,6 +564,28 @@ if os.path.exists(data_path):
 
     with tab_table2:
         st.plotly_chart(plot_airline_table(filtered), use_container_width=True)
+
+    # ---------------------- Key Insights ------------------
+    avg_compliance = filtered['compliance_rate'].mean()
+    worst_ref = (filtered.groupby('reference_number')['compliance_rate']
+    .mean().idxmin())
+    worst_ref_val = (filtered.groupby('reference_number')['compliance_rate']
+    .mean().min())
+
+
+    most_frequent_category = filtered['departures_cat'].mode()[0]
+
+
+    st.markdown(f"""
+    ### Key Insights
+    - Overall compliance rate is **{avg_compliance:.2%}**.
+    - The lowest performing audit group is **{worst_ref}** with **{worst_ref_val:.2%}** compliance.
+    - Departures are most frequently categorized as **{most_frequent_category}**.
+    - **{filtered['reference_number'].nunique()} unique audit groups** are being tracked.
+    - The dataset covers audits from **{filtered['year'].min()} to {filtered['year'].max()}**.
+    - Compliance shows variation across **quarters** — useful for seasonal trend analysis.
+    - Around **{len(filtered)} total records** provide a robust sample size.
+    """)
 
 
 else:
