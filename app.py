@@ -93,9 +93,9 @@ st.markdown(
     /* Sidebar */
     section[data-testid="stSidebar"] {{
         background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8)), 
-                # url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+                url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
                 # url('https://images.pexels.com/photos/2646237/pexels-photo-2646237.jpeg');
-                url('https://images.pexels.com/photos/2253921/pexels-photo-2253921.jpeg');
+                # url('https://images.pexels.com/photos/2253921/pexels-photo-2253921.jpeg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -174,8 +174,8 @@ st.markdown(
 
     /* Insights Card Enhancement */
     .insights-card {{
-        background: linear-gradient(145deg, rgba(17,17,17,0.9), rgba(42, 8, 181, 0.8)), 
-                url('https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/e51f93e6-7344-4fc9-8110-cd84c6203f43.png');
+        background: linear-gradient(145deg, rgba(17,17,17,0.9), {CUSTOM_PALETTE[3]}), 
+                url('https://img.freepik.com/premium-photo/modern-airplane-model-hightech-circuit-board-background-aviation-industry_1121645-6059.jpg');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -203,7 +203,7 @@ st.markdown(
     }}
     
     .insights-card:hover {{
-        transform: translateY(-3px);
+        # transform: translateY(-3px);
         box-shadow: 0 16px 48px rgba(0,0,0,0.5);
     }}
     
@@ -229,7 +229,7 @@ st.markdown(
     
     .insights-card li:hover {{
         color: {CUSTOM_PALETTE[1]};
-        transform: translateX(4px);
+        # transform: translateX(4px);
     }}
 
     /* Loading Animation */
