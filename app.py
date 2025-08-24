@@ -9,7 +9,7 @@ from datetime import datetime
 
 # ---------------------- Streamlit Config ----------------------
 st.set_page_config(
-    page_title="Audit Compliance Dashboard",
+    page_title="Airline Compliance Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -558,18 +558,6 @@ def plot_heatmap_table(filtered: pd.DataFrame):
         .reset_index()
     )
 
-    # Add total row (weighted compliance for accuracy)
-    total_row = pd.DataFrame({
-        "reference_number": ["Total"],
-        "count_of_audit": [agg_df["count_of_audit"].sum()],
-        "count_of_compliant_audit": [agg_df["count_of_compliant_audit"].sum()],
-        "compliance_rate": [
-            agg_df["count_of_compliant_audit"].sum() / agg_df["count_of_audit"].sum(),
-        ]  # weighted compliance rate
-    })
-
-    agg_df = pd.concat([agg_df, total_row], ignore_index=True)
-
     # Build row colors: darker shade for Total row
     row_colors = []
     for i, ref in enumerate(agg_df["reference_number"]):
@@ -626,19 +614,6 @@ def plot_airline_table(filtered: pd.DataFrame):
         })
         .reset_index()
     )
-
-    # Add total row (weighted compliance for accuracy)
-    total_row = pd.DataFrame({
-        "airline": ["Total"],
-        "count_of_audit": [agg_df["count_of_audit"].sum()],
-        "count_of_compliant_audit": [agg_df["count_of_compliant_audit"].sum()],
-        "compliance_rate": [
-            agg_df["count_of_compliant_audit"].sum() / agg_df["count_of_audit"].sum()
-        ]
-    })
-
-    agg_df = pd.concat([agg_df, total_row], ignore_index=True)
-
     # Row colors (darker shade for Total row)
     row_colors = []
     for ref in agg_df["airline"]:
@@ -657,7 +632,7 @@ def plot_airline_table(filtered: pd.DataFrame):
                         "Count of Compliant Audits",
                         "Avg. Compliance Rate"
                     ],
-                    fill_color=CUSTOM_PALETTE[0],
+                    fill_color=CUSTOM_PALETTE[4],
                     align="center",
                     font=dict(color="white", size=12)
                 ),
@@ -726,7 +701,7 @@ if os.path.exists(data_path):
     filtered = df.loc[mask].copy()
 
     # ---------------- Summary Metrics ----------------
-    st.markdown("## Audit Compliance Dashboard")
+    st.markdown("## Airline Compliance Dashboard")
     cols = st.columns(4)
     metrics = [
         ("Avg. Compliance Rate", f"{filtered['compliance_rate'].mean():.2%}"),
