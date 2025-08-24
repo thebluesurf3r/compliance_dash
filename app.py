@@ -39,12 +39,62 @@ px.defaults.color_discrete_sequence = CUSTOM_PALETTE
 # ---------------------- Custom CSS -----------------------------
 st.markdown(
     f"""
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Animations */
+    @keyframes fadeInUp {{
+        from {{
+            opacity: 0;
+            transform: translateY(30px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
+    }}
+    
+    @keyframes fadeInLeft {{
+        from {{
+            opacity: 0;
+            transform: translateX(-30px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+    }}
+    
+    @keyframes fadeInRight {{
+        from {{
+            opacity: 0;
+            transform: translateX(30px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+    }}
+    
+    @keyframes pulse {{
+        0%, 100% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.02); }}
+    }}
+    
+    @keyframes shimmer {{
+        0% {{ background-position: -1000px 0; }}
+        100% {{ background-position: 1000px 0; }}
+    }}
+
     /* Sidebar */
     section[data-testid="stSidebar"] {{
         background: linear-gradient(180deg, {CUSTOM_PALETTE[3]}, {CUSTOM_PALETTE[4]});
         color: #fff !important;
-    }}
+    }}    
 
     /* Score cards */
     .score-card {{
@@ -53,7 +103,7 @@ st.markdown(
         padding: 18px;
         text-align: center;
         color: #ffffff !important; /* Force black text */
-        box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+        box-shadow: 0 0px 3px {CUSTOM_PALETTE[4]};
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         transition: transform 0.2s ease-in-out;
     }}
@@ -106,35 +156,182 @@ st.markdown(
         padding: 18px 22px;
         margin: 10px 5px;
         color: #fff;
-        box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+        box-shadow: {CUSTOM_PALETTE[1]};
         transition: all 0.25s ease-in-out;
     }}
     .st-card:hover {{
         transform: translateY(-6px) scale(1.01);
-        box-shadow: 0 12px 20px rgba(0,0,0,0.8);
+        box-shadow: 0 12px 20px {CUSTOM_PALETTE[1]};
     }}
 
-    /* Section Headers */
+    /* Insights Card Enhancement */
+    .insights-card {{
+        background: linear-gradient(145deg, rgba(17,17,17,0.9), {CUSTOM_PALETTE[3]});
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 24px;
+        transition: all 0.4s ease;
+        box-shadow: 0 4px 8px {CUSTOM_PALETTE[4]};
+        color: #f0f0f0;
+        border: 1px solid rgba(255,255,255,0.1);
+        animation: fadeInUp 1s ease-out;
+        position: relative;
+        overflow: hidden;
+    }}
+    
+    .insights-card::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, {CUSTOM_PALETTE[0]}, {CUSTOM_PALETTE[2]});
+    }}
+    
+    .insights-card:hover {{
+        transform: translateY(-6px);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    }}
+    
+    .insights-card ul {{
+        list-style: none;
+        padding: 0;
+    }}
+    
+    .insights-card li {{
+        padding: 8px 0;
+        position: relative;
+        padding-left: 24px;
+        transition: all 0.3s ease;
+    }}
+    
+    .insights-card li::before {{
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: {CUSTOM_PALETTE[1]};
+        font-weight: bold;
+    }}
+    
+    .insights-card li:hover {{
+        color: {CUSTOM_PALETTE[1]};
+        transform: translateX(4px);
+    }}
+
+    /* Loading Animation */
+    .loading-container {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+    }}
+    
+    .loading-spinner {{
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255,255,255,0.1);
+        border-left: 4px solid {CUSTOM_PALETTE[1]};
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }}
+    
+    @keyframes spin {{
+        0% {{ transform: rotate(0deg); }}
+        100% {{ transform: rotate(360deg); }}
+    }}
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {{
+        .score-card {{
+            margin-bottom: 16px;
+        }}
+        .section-header {{
+            font-size: 1.4rem;
+        }}
+    }}
+    
+    /* Dashboard Title */
+    .dashboard-title {{
+        background: linear-gradient(135deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]});
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 32px;
+        animation: fadeInUp 0.8s ease-out;
+    }}
+    
+    /* Plotly Chart Styling */
+    .js-plotly-plot {{
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }}
+
+    /* Tab Enhancement */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 4px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 3px;
+        padding: 9px;
+        animation: fadeInUp 0.6s ease-out;
+    }}
+    
+    .stTabs [data-baseweb="tab"] {{
+        background: transparent;
+        border-radius: 3px;
+        padding: 9px;
+        transition: all 0.3s ease;
+        color: rgba(255,255,255,0.7);
+        font-weight: 250;
+    }}
+    
+    .stTabs [aria-selected="true"] {{
+        background: linear-gradient(135deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]}) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }}
+    
+    /* Section Headers with Icons */
     .section-header {{
-        font-size: 1.2rem;
+        font-size: 1.8rem;
         font-weight: 600;
         color: #ffffff;
-        margin-bottom: 12px;
+        margin: 32px 0 20px 0;
+        padding: 16px 0;
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+        position: relative;
+        animation: fadeInUp 0.6s ease-out;
+    }}
+    
+    .section-header::before {{
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, {CUSTOM_PALETTE[1]}, {CUSTOM_PALETTE[2]});
     }}
 
-    /* Key Insights Styling */
-    .insights-card {{
-        background: linear-gradient(145deg, #111, {CUSTOM_PALETTE[3]});
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 20px;
-        transition: all 0.25s ease-in-out;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        color: #f0f0f0;
+    /* Enhanced Chart Containers */
+    .chart-container {{
+        background: rgba(255,255,255,0.05);
+        border-radius: 16px;
+        padding: 24px;
+        margin: 16px 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.8s ease-out;
     }}
-    .insights-card:hover {{
+    
+    .chart-container:hover {{
         transform: translateY(-4px);
-        box-shadow: 0 8px 18px rgba(0,0,0,0.8);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
     }}
     
     </style>
@@ -576,16 +773,32 @@ if os.path.exists(data_path):
     most_frequent_category = filtered['departures_cat'].mode()[0]
 
 
-    st.markdown(f"""
-    ### Key Insights
-    - Overall compliance rate is **{avg_compliance:.2%}**.
-    - The lowest performing audit group is **{worst_ref}** with **{worst_ref_val:.2%}** compliance.
-    - Departures are most frequently categorized as **{most_frequent_category}**.
-    - **{filtered['reference_number'].nunique()} unique audit groups** are being tracked.
-    - The dataset covers audits from **{filtered['year'].min()} to {filtered['year'].max()}**.
-    - Compliance shows variation across **quarters** — useful for seasonal trend analysis.
-    - Around **{len(filtered)} total records** provide a robust sample size.
-    """)
+    # Key Insights in Bootstrap container
+    avg_compliance = filtered['compliance_rate'].mean()
+    worst_ref = (filtered.groupby('reference_number')['compliance_rate'].mean().idxmin())
+    worst_ref_val = (filtered.groupby('reference_number')['compliance_rate'].mean().min())
+    most_frequent_category = filtered['departures_cat'].mode()[0]
+    
+    insights_html = f"""
+    <div class="bootstrap-container">
+        <div class="insights-card">
+            <div class="section-header">
+                <i class="bi bi-lightbulb"></i> Key Insights
+            </div>
+            <ul>
+                <li>Overall compliance rate is <strong>{avg_compliance:.2%}</strong></li>
+                <li>The lowest performing audit group is <strong>{worst_ref}</strong> with <strong>{worst_ref_val:.2%}</strong> compliance</li>
+                <li>Departures are most frequently categorized as <strong>{most_frequent_category}</strong></li>
+                <li><strong>{filtered['reference_number'].nunique()} unique audit groups</strong> are being tracked</li>
+                <li>The dataset covers audits from <strong>{filtered['year'].min()} to {filtered['year'].max()}</strong></li>
+                <li>Compliance shows variation across quarters — useful for seasonal trend analysis</li>
+                <li>Around <strong>{len(filtered):,} total records</strong> provide a robust sample size</li>
+            </ul>
+        </div>
+    </div>
+    """
+    
+    st.markdown(insights_html, unsafe_allow_html=True)
 
 
 else:
