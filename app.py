@@ -691,6 +691,70 @@ def plot_airline_table(filtered: pd.DataFrame):
     fig.update_layout(title="Aggregated Metrics by Airline", height=300)
     return fig
 
+def plot_airport_table(filtered: pd.DataFrame):
+    # Exclude airport == "0" (robust to string or numeric zeros)
+    df = filtered.loc[~filtered["airport"].isin(["0", 0])].copy()
+
+    # Aggregate per airport
+    agg_df = (
+        df.groupby("airport", as_index=False)
+          .agg(
+              count_of_audit=("count_of_audit", "sum"),
+              count_of_compliant_audit=("count_of_compliant_audit", "sum"),
+              compliance_rate=("compliance_rate", "mean")   # keep numeric for sorting
+          )
+    )
+
+    # Sort AFTER aggregation (descending compliance, tie-break by audit count)
+    agg_df = (
+        agg_df.sort_values(
+            by=["compliance_rate", "count_of_audit"],
+            ascending=[False, False],
+            kind="mergesort",           # stable & predictable
+            na_position="last"
+        )
+        .reset_index(drop=True)
+    )
+
+    # Row colors (darker shade if a "Total" row exists)
+    row_colors = [
+        CUSTOM_PALETTE[1] if a == "Total" else CUSTOM_PALETTE[3]
+        for a in agg_df["airport"]
+    ]
+
+    # Build table
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(
+                    values=[
+                        "Airport",
+                        "Count of Audits",
+                        "Count of Compliant Audits",
+                        "Avg. Compliance Rate"
+                    ],
+                    fill_color=CUSTOM_PALETTE[4],
+                    align="center",
+                    font=dict(color="white", size=12),
+                ),
+                cells=dict(
+                    values=[
+                        agg_df["airport"],
+                        agg_df["count_of_audit"],
+                        agg_df["count_of_compliant_audit"],
+                        (agg_df["compliance_rate"] * 100).round(2).astype(str) + "%"
+                    ],
+                    fill_color=[row_colors] * 4,
+                    align="center",
+                    font=dict(color="white", size=11),
+                ),
+            )
+        ]
+    )
+
+    fig.update_layout(title="Aggregated Metrics by Airport", height=450)
+    return fig
+
 def plot_compliance_timeseries(filtered: pd.DataFrame, metric: str = "Compliance Rate"):
     import numpy as np
 
@@ -941,13 +1005,16 @@ if os.path.exists(data_path):
 
     # ---------------- Table Section ------------------
     st.markdown("## Aggregated Tables")
-    tab_table1, tab_table2 = st.tabs(["Audit Group", "Airline"])
+    tab_table1, tab_table2, tab_table3 = st.tabs(["Audit Group", "Airline", "Airport"])
 
     with tab_table1:
         st.plotly_chart(plot_heatmap_table(filtered), use_container_width=True)
 
     with tab_table2:
         st.plotly_chart(plot_airline_table(filtered), use_container_width=True)
+
+    with tab_table3:
+        st.plotly_chart(plot_airport_table(filtered), use_container_width=True)
 
     # ---------------------- Key Insights ------------------
     avg_compliance = filtered['compliance_rate'].mean()
